@@ -5,7 +5,7 @@ defmodule MiniRepo.MixProject do
     [
       app: :mini_repo,
       version: "0.2.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases()
@@ -21,7 +21,7 @@ defmodule MiniRepo.MixProject do
 
   defp deps() do
     [
-      {:hex_core, "~> 0.6.0"},
+      {:hex_core, "~> 0.8"},
 
       # plug
       {:plug, "~> 1.0"},
@@ -31,7 +31,10 @@ defmodule MiniRepo.MixProject do
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.0"},
       {:hackney, "~> 1.9"},
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+
+      # dev
+      {:dialyxir, "~> 1.0", only: [:test, :dev], runtime: false}
     ]
   end
 

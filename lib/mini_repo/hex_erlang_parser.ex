@@ -36,7 +36,7 @@ defmodule MiniRepo.HexErlangParser do
   end
 
   defp decode({:ok, body, conn}) do
-    terms = Plug.Crypto.safe_binary_to_term(body, [:safe])
+    terms = Plug.Crypto.non_executable_binary_to_term(body, [:safe])
     {:ok, terms, conn}
   rescue
     ArgumentError ->

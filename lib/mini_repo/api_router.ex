@@ -43,39 +43,31 @@ defmodule MiniRepo.APIRouter do
 
   delete "/api/repos/:repo/packages/:name/releases/:version" do
     repo = repo!(conn, repo)
+    MiniRepo.Repository.Server.revert(repo, name, version)
 
-    case MiniRepo.Repository.Server.revert(repo, name, version) do
-      :ok -> send_resp(conn, 204, "")
-      {:error, _} = error -> send_resp(conn, 400, inspect(error))
-    end
+    send_resp(conn, 204, "")
   end
 
   post "/api/repos/:repo/packages/:name/releases/:version/retire" do
     repo = repo!(conn, repo)
+    MiniRepo.Repository.Server.retire(repo, name, version, conn.body_params)
 
-    case MiniRepo.Repository.Server.retire(repo, name, version, conn.body_params) do
-      :ok -> send_resp(conn, 201, "")
-      {:error, _} = error -> send_resp(conn, 400, inspect(error))
-    end
+    send_resp(conn, 201, "")
   end
 
   delete "/api/repos/:repo/packages/:name/releases/:version/retire" do
     repo = repo!(conn, repo)
+    MiniRepo.Repository.Server.unretire(repo, name, version)
 
-    case MiniRepo.Repository.Server.unretire(repo, name, version) do
-      :ok -> send_resp(conn, 201, "")
-      {:error, _} = error -> send_resp(conn, 400, inspect(error))
-    end
+    send_resp(conn, 201, "")
   end
 
   post "/api/repos/:repo/packages/:name/releases/:version/docs" do
     repo = repo!(conn, repo)
     {:ok, docs_tarball, conn} = read_tarball(conn)
+    MiniRepo.Repository.Server.publish_docs(repo, name, version, docs_tarball)
 
-    case MiniRepo.Repository.Server.publish_docs(repo, name, version, docs_tarball) do
-      :ok -> send_resp(conn, 201, "")
-      {:error, _} = error -> send_resp(conn, 400, inspect(error))
-    end
+    send_resp(conn, 201, "")
   end
 
   match _ do
