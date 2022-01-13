@@ -6,20 +6,16 @@ defmodule MiniRepo.APIAuth do
   def init(opts), do: opts
 
   def call(conn, _opts) do
-    if String.starts_with?(conn.request_path, "/api") do
-      case get_req_header(conn, "authorization") do
-        [token] ->
-          if Plug.Crypto.secure_compare(token, Application.fetch_env!(:mini_repo, :auth_token)) do
-            conn
-          else
-            unauthorized(conn)
-          end
-
-        _ ->
+    case get_req_header(conn, "authorization") do
+      [token] ->
+        if Plug.Crypto.secure_compare(token, Application.fetch_env!(:mini_repo, :auth_token)) do
+          conn
+        else
           unauthorized(conn)
-      end
-    else
-      conn
+        end
+
+      _ ->
+        unauthorized(conn)
     end
   end
 
