@@ -9,6 +9,24 @@ defmodule MiniRepo.Repository.Server do
     Agent.start_link(fn -> RegistryBackup.load(repository) end, options)
   end
 
+  def fetch_package(pid, package_name) do
+    Agent.get(pid, fn repository ->
+      {:ok, package} =
+        MiniRepo.Store.fetch(repository.store, package_path(repository, package_name))
+
+      package
+    end)
+  end
+
+  def fetch_tarball(pid, tarball_name) do
+    Agent.get(pid, fn repository ->
+      {:ok, tarball} =
+        MiniRepo.Store.fetch(repository.store, tarball_path(repository, tarball_name))
+
+      tarball
+    end)
+  end
+
   def publish(pid, tarball) do
     with {:ok, {package_name, release}} <- MiniRepo.Utils.unpack_tarball(tarball) do
       Agent.update(pid, fn repository ->
@@ -41,10 +59,6 @@ defmodule MiniRepo.Repository.Server do
     end)
   end
 
-  defp tarball_path(repository, package_name, version) do
-    ["repos", repository.name, "tarballs", "#{package_name}-#{version}.tar"]
-  end
-
   def retire(pid, package_name, version, params) do
     Agent.update(pid, fn repository ->
       update_registry(repository, package_name, fn registry ->
@@ -65,12 +79,6 @@ defmodule MiniRepo.Repository.Server do
       end)
     end)
   end
-
-  defp retirement_reason("other"), do: :RETIRED_OTHER
-  defp retirement_reason("invalid"), do: :RETIRED_INVALID
-  defp retirement_reason("security"), do: :RETIRED_SECURITY
-  defp retirement_reason("deprecated"), do: :RETIRED_DEPRECATED
-  defp retirement_reason("renamed"), do: :RETIRED_RENAMED
 
   def unretire(pid, package_name, version) do
     Agent.update(pid, fn repository ->
@@ -106,6 +114,26 @@ defmodule MiniRepo.Repository.Server do
       repository
     end)
   end
+
+  # -- Private
+
+  defp tarball_path(repository, package_name, version) do
+    ["repos", repository.name, "tarballs", "#{package_name}-#{version}.tar"]
+  end
+
+  defp tarball_path(repository, tarball_name) do
+    ["repos", repository.name, "tarballs", tarball_name]
+  end
+
+  defp package_path(repository, package_name) do
+    ["repos", repository.name, "packages", package_name]
+  end
+
+  defp retirement_reason("other"), do: :RETIRED_OTHER
+  defp retirement_reason("invalid"), do: :RETIRED_INVALID
+  defp retirement_reason("security"), do: :RETIRED_SECURITY
+  defp retirement_reason("deprecated"), do: :RETIRED_DEPRECATED
+  defp retirement_reason("renamed"), do: :RETIRED_RENAMED
 
   defp update_registry(repository, package_name, fun) do
     repository = Map.update!(repository, :registry, fun)

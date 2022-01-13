@@ -70,6 +70,20 @@ defmodule MiniRepo.APIRouter do
     send_resp(conn, 201, "")
   end
 
+  get "/repos/:repo/packages/:package_name/" do
+    repo = repo!(conn, repo)
+    package = MiniRepo.Repository.Server.fetch_package(repo, package_name)
+
+    send_resp(conn, 200, package)
+  end
+
+  get "/repos/:repo/tarballs/:tarball_name" do
+    repo = repo!(conn, repo)
+    tarball = MiniRepo.Repository.Server.fetch_tarball(repo, tarball_name)
+
+    send_resp(conn, 200, tarball)
+  end
+
   match _ do
     send_resp(conn, 404, "not found")
   end
