@@ -34,6 +34,7 @@ defmodule MiniRepo.MixProject do
       {:jason, "~> 1.0"},
 
       # dev
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:test, :dev], runtime: false}
     ]
   end

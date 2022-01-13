@@ -1,4 +1,6 @@
 defmodule MiniRepo.RegistryBuilder do
+  @moduledoc false
+
   def build_full(repository, registry) do
     resources = %{
       "names" => build_names(repository, registry),

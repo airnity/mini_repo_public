@@ -1,4 +1,6 @@
 defmodule MiniRepo.Store do
+  @moduledoc false
+
   @callback put(path :: Path.t(), value :: binary, options :: keyword, state :: any) ::
               :ok | {:error, term}
 

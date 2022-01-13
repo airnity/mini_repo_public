@@ -40,6 +40,6 @@ defmodule MiniRepo.HexErlangParser do
     {:ok, terms, conn}
   rescue
     ArgumentError ->
-      raise Plug.BadRequestError, message: "bad terms"
+      reraise Plug.BadRequestError, [message: "bad terms"], __STACKTRACE__
   end
 end

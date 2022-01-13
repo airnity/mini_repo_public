@@ -55,7 +55,7 @@ defmodule MiniRepo.Utils do
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
 
   def generate_keys() do
-    {:ok, private_key} = generate_rsa_key(2048, 65537)
+    {:ok, private_key} = generate_rsa_key(2048, 65_537)
     public_key = extract_public_key(private_key)
     {pem_encode(:RSAPrivateKey, private_key), pem_encode(:RSAPublicKey, public_key)}
   end
