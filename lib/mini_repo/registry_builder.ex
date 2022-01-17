@@ -79,14 +79,21 @@ defmodule MiniRepo.RegistryBuilder do
   end
 
   defp sign_and_gzip(repository, protobuf) do
+    {:ok, private_key} =
+      SecretsWatcher.get_wrapped_secret(:secrets, repository.private_key_secret_name)
+
+    # TODO. Prune private key from stacktrace if an exception is raised.
     protobuf
-    |> :hex_registry.sign_protobuf(repository.private_key)
+    |> :hex_registry.sign_protobuf(private_key.())
     |> :zlib.gzip()
   end
 
   defp gunzip_signed(repository, signed) do
+    {:ok, public_key} =
+      SecretsWatcher.get_wrapped_secret(:secrets, repository.public_key_secret_name)
+
     signed
     |> :zlib.gunzip()
-    |> :hex_registry.decode_and_verify_signed(repository.public_key)
+    |> :hex_registry.decode_and_verify_signed(public_key.())
   end
 end

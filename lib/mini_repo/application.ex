@@ -8,16 +8,16 @@ defmodule MiniRepo.Application do
   def start(_type, _args) do
     config = configure()
 
-    secrets = configure_watched_secrets()
-
     stores = stores(config)
     repos = repositories(config, stores)
     regular_repos = for %MiniRepo.Repository{} = repo <- repos, do: repo.name
 
+    secrets = configure_watched_secrets(repos)
+
     children =
       []
-      |> add_task_supervisor()
       |> add_secrets_watcher(config, secrets)
+      |> add_task_supervisor()
       |> add_mini_repo(repos)
       |> add_cowboy(config, regular_repos)
 
@@ -50,8 +50,18 @@ defmodule MiniRepo.Application do
     end
   end
 
-  defp configure_watched_secrets() do
-    ["auth_token"]
+  defp configure_watched_secrets(repos) do
+    repos_public_secrets =
+      for %MiniRepo.Repository{} = repo <- repos do
+        repo.public_key_secret_name
+      end
+
+    repos_private_secrets =
+      for %MiniRepo.Repository{} = repo <- repos do
+        repo.private_key_secret_name
+      end
+
+    ["auth_token"] ++ repos_public_secrets ++ repos_private_secrets
   end
 
   defp add_secrets_watcher(children, config, secrets) do

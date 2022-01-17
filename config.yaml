@@ -14,8 +14,8 @@ appConfig:
   repositories:
     test_repo:
       store: s3
-      private_key: ./secrets/test_repo_private.pem
-      public_key: ./secrets/test_repo_private.pem
+      private_key_secret_name: test_repo_private.pem
+      public_key_secret_name: test_repo_private.pem
 
     hexpm_mirror:
       store: s3
