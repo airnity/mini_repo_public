@@ -66,4 +66,20 @@ defmodule MiniRepo.Mirror do
     registry: %{},
     sync_opts: []
   ]
+
+  def new(name, options, stores) do
+    %MiniRepo.Mirror{
+      name: name,
+      upstream_name: options["upstream_name"],
+      upstream_url: options["upstream_url"],
+      upstream_public_key: options["upstream_public_key"],
+      sync_interval: options["sync_interval"],
+      only: options["only"],
+      store: stores[options["store"]],
+      sync_opts: [
+        max_concurrency: options["sync_opts"]["max_concurrency"],
+        timeout: options["sync_opts"]["sync_opts"]
+      ]
+    }
+  end
 end

@@ -6,37 +6,63 @@ defmodule MiniRepo.Application do
 
   @impl true
   def start(_type, _args) do
-    config = Application.get_all_env(:mini_repo)
+    config = configure()
 
-    repos = repositories(config)
+    secrets = configure_watched_secrets()
+
+    stores = stores(config)
+    repos = repositories(config, stores)
     regular_repos = for %MiniRepo.Repository{} = repo <- repos, do: repo.name
 
     children =
       []
       |> add_task_supervisor()
+      |> add_secrets_watcher(config, secrets)
       |> add_mini_repo(repos)
       |> add_cowboy(config, regular_repos)
 
-    opts = [
-      strategy: :one_for_one,
-      name: MiniRepo.Supervisor
-    ]
+    opts = [strategy: :one_for_one, name: MiniRepo.Supervisor]
 
     Supervisor.start_link(children, opts)
   end
 
   # -- Private
 
-  defp repositories(config) do
-    for {name, options} <- Keyword.fetch!(config, :repositories) do
-      if options[:upstream_url] do
-        Logger.info("Starting mirror #{name} with store #{inspect(options[:store])}")
-        struct!(MiniRepo.Mirror, [name: to_string(name)] ++ options)
+  defp stores(config) do
+    for {name, options} <- Map.fetch!(config, :stores), into: %{} do
+      mod = get_store_mod(options["type"])
+      {name, {mod, bucket: options["bucket"], options: [region: options["region"]]}}
+    end
+  end
+
+  defp get_store_mod("s3"), do: MiniRepo.Store.S3
+  defp get_store_mod("local"), do: MiniRepo.Store.Local
+
+  defp repositories(config, stores) do
+    for {name, options} <- Map.fetch!(config, :repositories) do
+      if Map.has_key?(options, "upstream_url") do
+        Logger.info("Starting mirror #{name} with store #{inspect(options["store"])}")
+        MiniRepo.Mirror.new(name, options, stores)
       else
-        Logger.info("Starting repository #{name} with store #{inspect(options[:store])}")
-        struct!(MiniRepo.Repository, [name: to_string(name)] ++ options)
+        Logger.info("Starting repository #{name} with store #{inspect(options["store"])}")
+        MiniRepo.Repository.new(name, options, stores)
       end
     end
+  end
+
+  defp configure_watched_secrets() do
+    ["auth_token"]
+  end
+
+  defp add_secrets_watcher(children, config, secrets) do
+    child =
+      {SecretsWatcher,
+       [
+         name: :secrets,
+         secrets_watcher_config: [directory: config.secrets_directory, secrets: secrets]
+       ]}
+
+    children ++ [child]
   end
 
   defp add_task_supervisor(children) do
@@ -45,13 +71,13 @@ defmodule MiniRepo.Application do
 
   defp add_cowboy(children, config, regular_repos) do
     http_options = [
-      port: Keyword.fetch!(config, :port)
+      port: config.port
     ]
 
     Logger.info("Starting HTTP server with options #{inspect(http_options)}")
 
     router_opts = [
-      url: config[:url],
+      url: config.url,
       repositories: regular_repos
     ]
 
@@ -77,5 +103,31 @@ defmodule MiniRepo.Application do
 
   defp repository_spec(%MiniRepo.Repository{} = repo) do
     {MiniRepo.Repository.Server, repository: repo, name: String.to_atom(repo.name)}
+  end
+
+  defp configure() do
+    alias Vapor.Provider.{Dotenv, Env, File}
+
+    env_provider = [
+      %Dotenv{},
+      %Env{bindings: [configuration_path: "MINI_REPO_CONFIG_PATH"]}
+    ]
+
+    env_config = Vapor.load!(env_provider)
+
+    providers = [
+      %File{
+        path: env_config.configuration_path,
+        bindings: [
+          {:port, ["appConfig", "port"], map: &String.to_integer/1},
+          {:url, ["appConfig", "url"]},
+          {:secrets_directory, ["globalConfig", "secretsDirectory"]},
+          {:repositories, ["appConfig", "repositories"]},
+          {:stores, ["appConfig", "stores"]}
+        ]
+      }
+    ]
+
+    Vapor.load!(providers)
   end
 end

@@ -8,7 +8,9 @@ defmodule MiniRepo.APIAuth do
   def call(conn, _opts) do
     case get_req_header(conn, "authorization") do
       [token] ->
-        if Plug.Crypto.secure_compare(token, Application.fetch_env!(:mini_repo, :auth_token)) do
+        {:ok, auth_token} = SecretsWatcher.get_wrapped_secret(:secrets, "auth_token")
+
+        if Plug.Crypto.secure_compare(token, auth_token.()) do
           conn
         else
           unauthorized(conn)

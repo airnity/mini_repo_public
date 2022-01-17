@@ -22,6 +22,8 @@ defmodule MiniRepo.MixProject do
   defp deps() do
     [
       {:hex_core, "~> 0.8"},
+      {:secrets_watcher, "~> 0.5.0"},
+      {:vapor, "~> 0.10"},
 
       # plug
       {:plug, "~> 1.0"},

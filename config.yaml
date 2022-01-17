@@ -1,0 +1,45 @@
+globalConfig:
+  secretsDirectory: ./secrets
+
+appConfig:
+  port: "4000"
+  url: http://localhost:4000
+
+  stores:
+    s3:
+      type: s3
+      bucket: <BUCKET>
+      region: eu-west-3
+
+  repositories:
+    test_repo:
+      store: s3
+      private_key: ./secrets/test_repo_private.pem
+      public_key: ./secrets/test_repo_private.pem
+
+    hexpm_mirror:
+      store: s3
+      upstream_name: hexpm
+      upstream_url: https://repo.hex.pm
+      sync_interval: 300000 # 5min
+      sync_opts:
+        max_concurrency: 1
+        timeout: 5000
+
+      only:
+        - decimal
+        - protox
+
+      # https://hex.pm/docs/public_keys
+      upstream_public_key: |
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApqREcFDt5vV21JVe2QNB
+        Edvzk6w36aNFhVGWN5toNJRjRJ6m4hIuG4KaXtDWVLjnvct6MYMfqhC79HAGwyF+
+        IqR6Q6a5bbFSsImgBJwz1oadoVKD6ZNetAuCIK84cjMrEFRkELtEIPNHblCzUkkM
+        3rS9+DPlnfG8hBvGi6tvQIuZmXGCxF/73hU0/MyGhbmEjIKRtG6b0sJYKelRLTPW
+        XgK7s5pESgiwf2YC/2MGDXjAJfpfCd0RpLdvd4eRiXtVlE9qO9bND94E7PgQ/xqZ
+        J1i2xWFndWa6nfFnRxZmCStCOZWYYPlaxr+FZceFbpMwzTNs4g3d4tLNUcbKAIH4
+        0wIDAQAB
+        -----END PUBLIC KEY-----
+
+
