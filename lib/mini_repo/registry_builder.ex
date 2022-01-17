@@ -82,10 +82,11 @@ defmodule MiniRepo.RegistryBuilder do
     {:ok, private_key} =
       SecretsWatcher.get_wrapped_secret(:secrets, repository.private_key_secret_name)
 
-    # TODO. Prune private key from stacktrace if an exception is raised.
     protobuf
     |> :hex_registry.sign_protobuf(private_key.())
     |> :zlib.gzip()
+  rescue
+    e -> reraise e, Plug.Crypto.prune_args_from_stacktrace(__STACKTRACE__)
   end
 
   defp gunzip_signed(repository, signed) do
