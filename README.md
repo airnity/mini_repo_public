@@ -1,8 +1,8 @@
 # MiniRepo
 
-:warning: MiniRepo is deprecated in favour of an offical self-hosting solution from the Hex team, [`mix hex.registry build`](https://hexdocs.pm/hex/Mix.Tasks.Hex.Registry.html) (available from Hex v0.21+).
-
 MiniRepo allows self-hosting of Hex packages.
+
+ℹ️ This is a fork of the original [MiniRepo](https://github.com/wojtekmach/mini_repo), which is officially deprecated. However, we felt it fills a niche for companies that wish to host themselves their Elixir pacakges, as a simple frontend serving a S3 bucket. It's tailored for Airnity needs, but it should be generic enough to be usable by other companies.
 
 Features:
 
@@ -25,6 +25,13 @@ Features:
       * http://some_url/repos/<repo>
 
 Learn more about Hex specifications [here](https://github.com/hexpm/specifications).
+
+ℹ️ The main differences with the original code are:
+- we added routes to serve packages from S3
+- all routes require an authorization token
+- he configuration is now completely handled via a YAML file
+- we use [secrets_wartcher](https://hex.pm/packages/secrets_watcher) to pass secrets
+
 
 ## Setup
 
