@@ -2,13 +2,15 @@ defmodule MiniRepo.RegistryBuilderTest do
   use ExUnit.Case, async: true
   alias MiniRepo.{RegistryBuilder, Repository}
 
+  @moduletag :to_fix
+
   setup do
     {private_key, public_key} = MiniRepo.Utils.generate_keys()
 
     repository = %Repository{
       name: "test",
-      private_key: private_key,
-      public_key: public_key,
+      private_key_secret_name: private_key,
+      public_key_secret_name: public_key,
       store: SomeStore
     }
 

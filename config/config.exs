@@ -15,7 +15,8 @@ if Mix.env() != :prod do
         verbose: false,
         tasks: [
           {:cmd, "mix deps.unlock --check-unused"},
-          {:cmd, "mix dialyzer"}
+          {:cmd, "mix dialyzer"},
+          {:cmd, "mix test"}
         ]
       ]
     ]

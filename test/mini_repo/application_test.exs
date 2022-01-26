@@ -1,6 +1,8 @@
 defmodule MiniRepo.ApplicationTest do
   use ExUnit.Case
 
+  @moduletag :to_fix
+
   setup do
     File.rm_rf!("tmp")
     File.rm_rf!(Path.join(Application.app_dir(:mini_repo), "data"))
