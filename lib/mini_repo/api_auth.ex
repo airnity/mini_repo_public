@@ -6,11 +6,11 @@ defmodule MiniRepo.APIAuth do
   def init(opts), do: opts
 
   def call(conn, _opts) do
+    route_token = get_wrapped_secret_for_route(conn)
+
     case get_req_header(conn, "authorization") do
       [token] ->
-        {:ok, auth_token} = SecretsWatcher.get_wrapped_secret(:secrets, "auth_token")
-
-        if Plug.Crypto.secure_compare(token, auth_token.()) do
+        if Plug.Crypto.secure_compare(token, route_token.()) do
           conn
         else
           unauthorized(conn)
@@ -26,5 +26,17 @@ defmodule MiniRepo.APIAuth do
     |> put_resp_content_type("application/vnd.hex+erlang")
     |> send_resp(401, :erlang.term_to_binary("unauthorized"))
     |> halt()
+  end
+
+  defp get_wrapped_secret_for_route(conn) do
+    token_name =
+      case conn do
+        %{path_info: ["api" | _rest]} -> "api_token"
+        %{path_info: ["repos" | _rest]} -> "repos_token"
+      end
+
+    {:ok, token} = SecretsWatcher.get_wrapped_secret(:secrets, token_name)
+
+    token
   end
 end

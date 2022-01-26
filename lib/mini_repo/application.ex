@@ -61,7 +61,7 @@ defmodule MiniRepo.Application do
         repo.private_key_secret_name
       end
 
-    ["auth_token"] ++ repos_public_secrets ++ repos_private_secrets
+    ["api_token", "repos_token"] ++ repos_public_secrets ++ repos_private_secrets
   end
 
   defp add_secrets_watcher(children, config, secrets) do
