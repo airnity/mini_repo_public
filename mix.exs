@@ -38,6 +38,7 @@ defmodule MiniRepo.MixProject do
       # dev
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:test, :dev], runtime: false},
+      {:git_hooks, ">= 0.0.0", only: [:test, :dev], runtime: false},
       {:mix_audit, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
