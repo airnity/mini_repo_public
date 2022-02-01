@@ -8,15 +8,15 @@ defmodule MiniRepo.Application do
   def start(_type, _args) do
     config = configure()
 
+    configure_ex_aws(config)
+
     stores = stores(config)
     repos = repositories(config, stores)
     regular_repos = for %MiniRepo.Repository{} = repo <- repos, do: repo.name
 
-    secrets = configure_watched_secrets(repos)
-
     children =
       []
-      |> add_secrets_watcher(config, secrets)
+      |> add_secret_agent(config, repos)
       |> add_task_supervisor()
       |> add_mini_repo(repos)
       |> add_cowboy(config, regular_repos)
@@ -27,6 +27,38 @@ defmodule MiniRepo.Application do
   end
 
   # -- Private
+
+  defp configure_ex_aws(config) do
+    ex_aws_config =
+      case config.aws_auth_type do
+        "profile" ->
+          profile = Map.get(config.aws_auth_options, "profile", "default")
+
+          [
+            access_key_id: [{:awscli, profile, 30}],
+            secret_access_key: [{:awscli, profile, 30}]
+          ]
+
+        "session" ->
+          [
+            access_key_id: {:system, "AWS_ACCESS_KEY_ID"},
+            security_token: {:system, "AWS_SESSION_TOKEN"},
+            secret_access_key: {:system, "AWS_SECRET_ACCESS_KEY"}
+          ]
+
+        "irsa" ->
+          [
+            secret_access_key: [{:awscli, "dummy", 30}],
+            access_key_id: [{:awscli, "dummy", 30}],
+            awscli_auth_adapter: ExAws.STS.AuthCache.AssumeRoleWebIdentityAdapter
+          ]
+
+        method ->
+          raise "Unsupported AWS authentication method #{method}"
+      end
+
+    Application.put_all_env([{:ex_aws, ex_aws_config}])
+  end
 
   defp stores(config) do
     for {name, options} <- Map.fetch!(config, :stores), into: %{} do
@@ -50,27 +82,32 @@ defmodule MiniRepo.Application do
     end
   end
 
-  defp configure_watched_secrets(repos) do
+  defp configure_watched_secrets(config, repos) do
+    secrets_directory = config.secrets_directory
+
+    secrets = %{
+      "api_token" => [directory: secrets_directory],
+      "repos_token" => [directory: secrets_directory]
+    }
+
     repos_public_secrets =
-      for %MiniRepo.Repository{} = repo <- repos do
-        repo.public_key_secret_name
+      for %MiniRepo.Repository{} = repo <- repos, into: %{} do
+        {repo.public_key_secret_name, [directory: secrets_directory]}
       end
 
     repos_private_secrets =
-      for %MiniRepo.Repository{} = repo <- repos do
-        repo.private_key_secret_name
+      for %MiniRepo.Repository{} = repo <- repos, into: %{} do
+        {repo.private_key_secret_name, [directory: secrets_directory]}
       end
 
-    ["api_token", "repos_token"] ++ repos_public_secrets ++ repos_private_secrets
+    secrets
+    |> Map.merge(repos_public_secrets)
+    |> Map.merge(repos_private_secrets)
   end
 
-  defp add_secrets_watcher(children, config, secrets) do
-    child =
-      {SecretsWatcher,
-       [
-         name: :secrets,
-         secrets_watcher_config: [directory: config.secrets_directory, secrets: secrets]
-       ]}
+  defp add_secret_agent(children, config, repos) do
+    secrets = configure_watched_secrets(config, repos)
+    child = {SecretAgent, [name: :secrets, secret_agent_config: [secrets: secrets]]}
 
     children ++ [child]
   end
@@ -129,6 +166,8 @@ defmodule MiniRepo.Application do
       %File{
         path: env_config.configuration_path,
         bindings: [
+          {:aws_auth_type, ["appConfig", "aws_auth", "type"]},
+          {:aws_auth_options, ["appConfig", "aws_auth", "options"], default: %{}},
           {:port, ["appConfig", "port"], map: &String.to_integer/1},
           {:url, ["appConfig", "url"]},
           {:secrets_directory, ["globalConfig", "secretsDirectory"]},
