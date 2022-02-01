@@ -29,9 +29,12 @@ defmodule MiniRepo.MixProject do
       {:plug, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
 
-      # s3
+      # aws
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.0"},
+      {:ex_aws_sts, "~> 2.3"},
+      {:sweet_xml, "~> 0.7"},
+      {:configparser_ex, "~> 4.0"},
       {:hackney, "~> 1.9"},
       {:jason, "~> 1.0"},
 
