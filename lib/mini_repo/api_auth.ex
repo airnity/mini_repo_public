@@ -35,7 +35,7 @@ defmodule MiniRepo.APIAuth do
         %{path_info: ["repos" | _rest]} -> "repos_token"
       end
 
-    {:ok, token} = SecretsWatcher.get_wrapped_secret(:secrets, token_name)
+    {:ok, token} = SecretAgent.get_secret(:secrets, token_name, erase: false)
 
     token
   end

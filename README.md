@@ -29,8 +29,8 @@ Learn more about Hex specifications [here](https://github.com/hexpm/specificatio
 ℹ️ The main differences with the original code are:
 - we added routes to serve packages from S3
 - all routes require an authorization token
-- he configuration is now completely handled via a YAML file
-- we use [secrets_watcher](https://hex.pm/packages/secrets_watcher) to pass secrets
+- the configuration is now completely handled via a YAML file
+- we use [secret_agent](https://hex.pm/packages/secret_agent_) to manage secrets
 
 
 ## Setup

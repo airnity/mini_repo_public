@@ -80,7 +80,7 @@ defmodule MiniRepo.RegistryBuilder do
 
   defp sign_and_gzip(repository, protobuf) do
     {:ok, private_key} =
-      SecretsWatcher.get_wrapped_secret(:secrets, repository.private_key_secret_name)
+      SecretAgent.get_secret(:secrets, repository.private_key_secret_name, erase: false)
 
     protobuf
     |> :hex_registry.sign_protobuf(private_key.())
@@ -91,7 +91,7 @@ defmodule MiniRepo.RegistryBuilder do
 
   defp gunzip_signed(repository, signed) do
     {:ok, public_key} =
-      SecretsWatcher.get_wrapped_secret(:secrets, repository.public_key_secret_name)
+      SecretAgent.get_secret(:secrets, repository.public_key_secret_name, erase: false)
 
     signed
     |> :zlib.gunzip()

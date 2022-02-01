@@ -5,6 +5,9 @@ appConfig:
   port: "4000"
   url: http://localhost:4000
 
+  aws_auth:
+    type: session
+
   stores:
     s3:
       type: s3
