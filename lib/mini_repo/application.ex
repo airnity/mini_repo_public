@@ -9,6 +9,7 @@ defmodule MiniRepo.Application do
     config = configure()
 
     configure_ex_aws(config)
+    Logger.info("ARN: #{MiniRepo.AWS.get_caller_identity_arn()}")
 
     stores = stores(config)
     repos = repositories(config, stores)
